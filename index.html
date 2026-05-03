@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERNOS DE GRUPO COMBINADOS EM 5</title>
+    <style>
+        /* TEMA: PRETO E VERMELHO */
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+        }
+
+        /* TELA DE LOGIN */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+        }
+
+        .login-box {
+            border: 2px solid #ff0000;
+            padding: 30px;
+            border-radius: 15px;
+            background: #0a0a0a;
+        }
+
+        .login-input {
+            padding: 12px;
+            font-size: 1rem;
+            width: 250px;
+            background: #111;
+            border: 1px solid #ff0000;
+            color: #fff;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* CONTEÚDO PRINCIPAL (INICIALMENTE ESCONDIDO) */
+        #main-app { display: none; }
+
+        h1 { color: #ff0000; text-transform: uppercase; font-size: 1.8rem; margin-bottom: 20px; }
+        .container { max-width: 800px; margin: auto; border: 2px solid #ff0000; padding: 20px; border-radius: 15px; background: #0a0a0a; }
+
+        /* GRID E BOTÕES */
+        .grid-numbers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+        .num-btn { background: #1a1a1a; border: 1px solid #ff000033; color: white; padding: 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .num-btn.selected { background: #ff0000; border-color: #fff; box-shadow: 0 0 10px #ff0000; }
+        .conferidor-area { background: #111; padding: 20px; border-radius: 10px; margin: 25px 0; border: 1px dashed #ff0000; }
+        .conf-input { width: 55px; padding: 10px; text-align: center; font-size: 1.2rem; background: #000; color: #ff0000; border: 1px solid #ff0000; margin: 5px; border-radius: 5px; }
+        .btn-action { background: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 0.9rem; cursor: pointer; border-radius: 5px; margin: 5px; font-weight: bold; text-transform: uppercase; }
+        .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 25px; }
+        .game-card { background: #151515; padding: 12px; border: 1px solid #333; border-radius: 6px; font-size: 0.9rem; }
+        .highlight { border: 2px solid #00ff00 !important; background: #002200 !important; color: #fff; transform: scale(1.08); }
+
+        /* --- ESTILO DO POPUP ANIMADO --- */
+        #popup-win {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: #000;
+            border: 4px solid #ff0000;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 90%;
+            animation: popupShow 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px #ff0000;
+        }
+
+        @keyframes popupShow {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .popup-content h2 { color: #00ff00; font-size: 2rem; margin-bottom: 20px; }
+        .popup-content p { font-size: 1.5rem; font-weight: bold; margin-bottom: 30px; }
+
+        footer { margin-top: 40px; color: #555; font-size: 0.8rem; padding: 20px; border-top: 1px solid #222; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- POPUP DE VITÓRIA -->
+    <div id="popup-win">
+        <div class="popup-content">
+            <h2>🎉 VITÓRIA! 🎉</h2>
+            <div id="popup-message"></div>
+            <button class="btn-action" onclick="closePopup()">FECHAR</button>
+        </div>
+    </div>
+
+    <!-- TELA DE ACESSO -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="color: #ff0000;">ACESSO RESTRITO</h2>
+            <p>Digite a senha para liberar o sistema:</p>
+            <input type="password" id="password-input" class="login-input" placeholder="SENHA AQUI">
+            <br>
+            <button class="btn-action" onclick="verifyPassword()">ENTRAR</button>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO DO SITE -->
+    <div id="main-app">
+        <div class="container">
+            <h1>TERNOS DE GRUPO COMBINADOS EM 5</h1>
+            
+            <p>Selecione as 16 dezenas para o fechamento:</p>
+            <div class="grid-numbers" id="selector"></div>
+
+            <div>
+                <button class="btn-action" onclick="clearAll()">Limpar Tudo</button>
+                <button class="btn-action" onclick="shareResults()">Compartilhar Ternos</button>
+            </div>
+
+            <div class="conferidor-area">
+                <h3>CONFERIDOR (5 DEZENAS)</h3>
+                <input type="number" class="conf-input" placeholder="01">
+                <input type="number" class="conf-input" placeholder="02">
+                <input type="number" class="conf-input" placeholder="03">
+                <input type="number" class="conf-input" placeholder="04">
+                <input type="number" class="conf-input" placeholder="05">
+                <br>
+                <button class="btn-action" style="background: #333; border: 1px solid #ff0000;" onclick="checkGames()">Conferir Agora</button>
+            </div>
+
+            <div id="display-results" class="results"></div>
+
+            <footer>Criado por Guinho Do Bicho</footer>
+        </div>
+    </div>
+
+    <script>
+        const PASS = "TERNODEGRUPOCOMBINADO";
+
+        // Memória de dispositivo
+        window.onload = function() {
+            if (localStorage.getItem("guinho_access") === "true") {
+                showApp();
+            }
+        };
+
+        function verifyPassword() {
+            const input = document.getElementById("password-input").value;
+            if (input === PASS) {
+                localStorage.setItem("guinho_access", "true");
+                showApp();
+            } else {
+                alert("Senha Incorreta!");
+            }
+        }
+
+        function showApp() {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-app").style.display = "block";
+            initApp();
+        }
+
+        // Matriz técnica 16-5-3-5
+        const baseMatrix = [
+            [1,2,3,5,12],[1,2,13,14,15],[1,3,10,12,16],[1,4,8,9,14],[1,4,10,12,13],
+            [1,4,10,13,15],[1,5,11,12,15],[1,6,9,10,14],[2,3,4,12,16],[2,3,5,6,15],
+            [2,3,6,8,10],[2,4,6,8,16],[2,4,9,12,15],[2,5,10,11,14],[2,6,9,12,13],
+            [3,4,7,13,14],[3,5,13,14,15],[3,6,11,13,14],[3,9,10,12,13],[4,5,11,15,16],
+            [4,6,7,11,12],[5,6,7,9,16],[5,7,8,13,15],[5,8,9,10,11],[6,8,12,14,15],
+            [7,8,10,11,16],[7,9,11,15,16]
+        ];
+
+        let selectedNumbers = [];
+
+        function initApp() {
+            const selectorDiv = document.getElementById('selector');
+            selectorDiv.innerHTML = '';
+            for (let i = 1; i <= 25; i++) {
+                let btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.innerText = i.toString().padStart(2, '0');
+                btn.onclick = () => toggleNumber(i, btn);
+                selectorDiv.appendChild(btn);
+            }
+        }
+
+        function toggleNumber(num, btn) {
+            if (selectedNumbers.includes(num)) {
+                selectedNumbers = selectedNumbers.filter(n => n !== num);
+                btn.classList.remove('selected');
+            } else if (selectedNumbers.length < 16) {
+                selectedNumbers.push(num);
+                btn.classList.add('selected');
+            }
+            generateGames();
+        }
+
+        function generateGames() {
+            const display = document.getElementById('display-results');
+            display.innerHTML = '';
+            if (selectedNumbers.length < 16) return;
+            const sortedChoices = [...selectedNumbers].sort((a, b) => a - b);
+            baseMatrix.forEach((row, index) => {
+                const game = row.map(idx => sortedChoices[idx - 1]);
+                const gameDiv = document.createElement('div');
+                gameDiv.className = 'game-card';
+                gameDiv.id = `game-${index}`;
+                gameDiv.innerText = game.map(n => n.toString().padStart(2, '0')).join(' - ');
+                display.appendChild(gameDiv);
+            });
+        }
+
+        // Função de Conferência com Contador de Popup
+        function checkGames() {
+            const inputs = document.querySelectorAll('.conf-input');
+            const draw = Array.from(inputs).map(i => parseInt(i.value)).filter(n => !isNaN(n));
+            
+            if (selectedNumbers.length < 16 || draw.length < 5) {
+                alert("Selecione 16 dezenas e preencha os 5 números do resultado.");
+                return;
+            }
+
+            let winnersCount = 0; // Contador de ternos premiados
+            const sortedChoices = [...selectedNumbers].sort((a, b) => a - b);
+
+            baseMatrix.forEach((row, index) => {
+                const game = row.map(idx => sortedChoices[idx - 1]);
+                const hits = game.filter(n => draw.includes(n)).length;
+                const card = document.getElementById(`game-${index}`);
+                
+                if (hits >= 3) {
+                    winnersCount++; // Soma um terno ganho
+                    card.classList.add('highlight');
+                    card.innerHTML = `${game.map(n => n.toString().padStart(2, '0')).join(' - ')}<br><strong>✅ ${hits} ACERTOS</strong>`;
+                } else {
+                    card.classList.remove('highlight');
+                    card.innerText = game.map(n => n.toString().padStart(2, '0')).join(' - ');
+                }
+            });
+
+            // Dispara o Popup se houver acertos
+            if (winnersCount > 0) {
+                showPopup(winnersCount);
+            }
+        }
+
+        function showPopup(count) {
+            const popup = document.getElementById('popup-win');
+            const message = document.getElementById('popup-message');
+            message.innerHTML = `<p>PARABENS POIS ACERTOU ${count} TERNOS DE GRUPO!</p>`;
+            popup.style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('popup-win').style.display = 'none';
+        }
+
+        function clearAll() {
+            selectedNumbers = [];
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.conf-input').forEach(i => i.value = '');
+            generateGames();
+        }
+
+        function shareResults() {
+            const games = document.getElementById('display-results').innerText;
+            if (selectedNumbers.length < 16) return;
+            const shareText = `Ternos de Grupo - Guinho Do Bicho:\n\n${games}`;
+            if (navigator.share) {
+                navigator.share({ title: 'Ternos', text: shareText });
+            } else {
+                navigator.clipboard.writeText(shareText);
+                alert("Copiado!");
+            }
+        }
+
+        // Bloqueio de Inspeção
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.keyCode == 85)) return false;
+        };
+    </script>
+</body>
+</html>
